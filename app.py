@@ -1,8 +1,19 @@
 import streamlit as st
 import core
+import storage
+from datetime import datetime
+import time
 
 # ---------- PAGE CONFIG ----------
-st.set_page_config(page_title="OroPuro", layout="centered")
+st.set_page_config(page_title="BN_OroPuro_Signal", layout="centered")
+
+# ---------- AUTO-REFRESH (60 seconds) ----------
+st.markdown(
+    """
+    <meta http-equiv="refresh" content="60">
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------- CUSTOM CSS: BLACK BG, WHITE TEXT, CENTERED ----------
 st.markdown(
@@ -25,22 +36,13 @@ st.markdown(
         background-color: #444444;
         border-color: #888888;
     }
-    .css-1d391kg, .css-1v3fvcr, .css-1kyxreq, .css-1q8dd9e {
-        color: #FFFFFF !important;
-    }
     h1, h2, h3, h4, h5, h6, p, div, span, label {
         color: #FFFFFF !important;
     }
     .css-1v0mbdj, .css-1vbkxwb {
         background-color: #000000;
     }
-    .css-18e3th9 {
-        padding-top: 2rem;
-    }
     .stMarkdown, .stText {
-        text-align: center;
-    }
-    .center {
         text-align: center;
     }
     </style>
@@ -49,7 +51,7 @@ st.markdown(
 )
 
 # ---------- TITLE ----------
-st.markdown("<h1 style='text-align: center;'>OroPuro</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>BN OroPuro Signal</h1>", unsafe_allow_html=True)
 
 # ---------- RUN SCAN BUTTON ----------
 if st.button("🔍 RUN SCAN"):
@@ -80,7 +82,7 @@ if st.button("🔍 RUN SCAN"):
             st.markdown(f"**Exchange:** {result.get('exchange', 'N/A')}")
         st.markdown(f"**Score (0‑1):** {result.get('score', 0.0):.3f}")
 
-        # ----- TRADE PARAMETERS (calculated from expected_move and ATR) -----
+        # ----- TRADE PARAMETERS -----
         expected_move = result.get('expected_move', 0.0)
         atr = expected_move / 1.2 if expected_move > 0 else 0.0
         suggested_tp = expected_move
@@ -93,29 +95,23 @@ if st.button("🔍 RUN SCAN"):
             st.markdown(f"**Suggested Take Profit:** {suggested_tp:.2f}%")
         with col2:
             st.markdown(f"**Suggested Stop Loss:** {suggested_sl:.2f}%")
-        st.markdown(f"**Probability proxy (score):** {result.get('score', 0.0):.3f}  \n*Este score es una aproximación probabilística, no una certeza.*")
+        st.markdown(f"**Probability proxy (score):** {result.get('score', 0.0):.3f}")
 
-    # ----- TIME METRICS (always shown) -----
+    # ----- TIME METRICS (from persistent storage) -----
     st.markdown("---")
-    st.markdown("### ⏱️ TIME METRICS")
+    st.markdown("### ⏱️ TIME METRICS (persistent)")
+    time_since = storage.get_time_since_last_signal()
+    est_next = storage.get_estimated_next_signal()
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"**Time since last signal (min):** {result.get('time_since_last_signal_min', 0.0):.1f}")
+        st.markdown(f"**Time since last signal (min):** {time_since:.1f}")
     with col2:
-        st.markdown(f"**Estimated time to next signal (min):** {result.get('estimated_time_to_next_signal_min', 0.0):.1f}")
-    st.markdown("*Tiempo desde última señal de alta calidad (score >0.7): no disponible en esta versión.*")
+        st.markdown(f"**Estimated time to next signal (min):** {est_next:.1f}")
 
-    # ----- MARKET DIAGNOSTIC (simple) -----
-    st.markdown("---")
-    st.markdown("### 🌍 MARKET DIAGNOSTIC")
-    st.markdown("*Diagnóstico agregado no disponible en modo simple. Use el score y spread del activo seleccionado como referencia.*")
-
-    if status == "SIGNAL":
-        st.markdown("---")
-        st.markdown("### 🔎 CRYPTO DIAGNOSTIC (selected asset)")
-        st.markdown(f"**Momentum:** {result.get('score', 0.0):.3f} (proxy)")
-        st.markdown(f"**Volatility (ATR):** {atr:.2f}%")
-        st.markdown(f"**Liquidity condition (spread):** no disponible en esta versión")
+    # Optionally show last signal info
+    last_signal = storage.get_last_signal_time()
+    if last_signal:
+        st.markdown(f"*Última señal registrada: {last_signal}*")
 
 # ---------- DISCLAIMER (always visible) ----------
 st.markdown("---")
@@ -135,8 +131,8 @@ st.markdown(
     """
     <div style='text-align: center;'>
     <h4>☕ Donations / Donaciones</h4>
-    <p><strong>Alias:</strong> &lt;INSERT_ALIAS&gt;</p>
-    <p><strong>USDT TRC20:</strong> <code>&lt;INSERT_ADDRESS&gt;</code></p>
+    <p><strong>Alias:</strong> WALYWASABY</p>
+    <p><strong>USDT TRC20:</strong> <code>TCiRVXggAqDx6bhJH5KBdf8E4NcJ2voMf8</code></p>
     <p style='font-size: 0.8rem;'><em>ES:</em> Donaciones opcionales. Algunos usuarios destinan una parte de sus ganancias como práctica personal de disciplina.<br>
     <em>EN:</em> Donations are optional. Some users allocate a portion of their gains as a personal discipline practice.</p>
     </div>
